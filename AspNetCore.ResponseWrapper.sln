@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{75F16707-DB7C-4C43-8578-219A365261D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCore.ResponseWrapper", "src\AspNetCore.ResponseWrapper\AspNetCore.ResponseWrapper.csproj", "{F841A793-72D0-41D0-83BE-6186E66233E0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{06C1EE9B-110F-45A4-B2E5-96997D00D574}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultWrapperSample", "samples\DefaultWrapperSample\DefaultWrapperSample.csproj", "{77007EDC-0F47-42BB-AA45-6CDA6CF15867}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomResponseWrapper", "samples\CustomResponseWrapper\CustomResponseWrapper.csproj", "{90B9B0B7-7F6E-49C2-B89A-EB898369A18F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F841A793-72D0-41D0-83BE-6186E66233E0} = {75F16707-DB7C-4C43-8578-219A365261D6}
+		{77007EDC-0F47-42BB-AA45-6CDA6CF15867} = {06C1EE9B-110F-45A4-B2E5-96997D00D574}
+		{90B9B0B7-7F6E-49C2-B89A-EB898369A18F} = {06C1EE9B-110F-45A4-B2E5-96997D00D574}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F841A793-72D0-41D0-83BE-6186E66233E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F841A793-72D0-41D0-83BE-6186E66233E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F841A793-72D0-41D0-83BE-6186E66233E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F841A793-72D0-41D0-83BE-6186E66233E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77007EDC-0F47-42BB-AA45-6CDA6CF15867}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77007EDC-0F47-42BB-AA45-6CDA6CF15867}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77007EDC-0F47-42BB-AA45-6CDA6CF15867}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77007EDC-0F47-42BB-AA45-6CDA6CF15867}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90B9B0B7-7F6E-49C2-B89A-EB898369A18F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90B9B0B7-7F6E-49C2-B89A-EB898369A18F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90B9B0B7-7F6E-49C2-B89A-EB898369A18F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90B9B0B7-7F6E-49C2-B89A-EB898369A18F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
