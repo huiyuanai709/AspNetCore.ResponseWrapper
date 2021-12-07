@@ -3,17 +3,42 @@ AspNetCore.ResponseWrapper is a HTTP API response wrapper, It supports various A
 
 ## Features:
 
-1. ModelInvalid wrapper by <code>ActionFilter</code>
-2. ObjectResult/EmptyResult wrapper by <code>ActionFilter</code>
-3. Swagger supported by <code>ProducesResponseTypeAttribute</code>
-4. Custom response wrapper supported
-5. Disable specified response wrapper by <code>[DisableWrapper]</code>
+1. ModelInvalid response wrapper
+2. ObjectResult/EmptyResult response wrapper
+3. Swagger response wrapped type display
+4. Custom response wrapper
+5. Disable response wrapper for specified Controller/Action
 
 ## Usage
 
 1. Basic
 ```c#
 builder.Services.AddControllers().AddResponseWrapper();
+```
+2. Disable response wrapper
+```C#
+[DisableWrapper]
+[ApiController]
+[Route("[controller]")]
+public class WeatherForecastController : ControllerBase
+{
+}
+```
+
+or 
+```C#
+[DisableWrapper]
+[HttpGet("GetWeatherForecast")]
+public IEnumerable<WeatherForecast> Get()
+{
+    return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        {
+            Date = DateTime.Now.AddDays(index),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        })
+        .ToArray();
+}
 ```
 
 See samples...

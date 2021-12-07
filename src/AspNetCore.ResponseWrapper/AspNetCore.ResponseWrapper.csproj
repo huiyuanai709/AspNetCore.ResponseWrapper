@@ -9,10 +9,11 @@
         <IsPackable>true</IsPackable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Description>Asp.Net core response wrapper</Description>
-        <PackageLicense>https://licenses.nuget.org/MIT</PackageLicense>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageIcon>logo.png</PackageIcon>
         <RepositoryUrl>https://github.com/huiyuanai709/AspNetCore.ResponseWrapper</RepositoryUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageTags>AspNetCore HTTP Response Wrapper</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
