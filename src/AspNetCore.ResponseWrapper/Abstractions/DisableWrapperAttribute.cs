@@ -1,6 +1,9 @@
-﻿namespace AspNetCore.ResponseWrapper.Abstractions;
+﻿using System;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class DisableWrapperAttribute : Attribute, IDisableWrapperMetadata
+namespace AspNetCore.ResponseWrapper.Abstractions
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    public class DisableWrapperAttribute : Attribute, IDisableWrapperMetadata
+    {
+    }
 }

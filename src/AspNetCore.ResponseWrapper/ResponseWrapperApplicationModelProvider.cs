@@ -1,149 +1,155 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using AspNetCore.ResponseWrapper.Abstractions;
 using AspNetCore.ResponseWrapper.Mvc.Filters;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace AspNetCore.ResponseWrapper;
-
-public class ResponseWrapperApplicationModelProvider : IApplicationModelProvider
+namespace AspNetCore.ResponseWrapper
 {
-    private readonly ILoggerFactory _loggerFactory;
-    private readonly IResponseWrapper _responseWrapper;
-    private readonly Type _responseWrapperType;
-    private readonly IResponseWrapper<object?> _genericResponseWrapper;
-    private readonly Type _genericWrapperType;
-    private readonly bool _suppressModelInvalidWrapper;
-    private readonly bool _onlyAvailableInApiController;
-
-    public ResponseWrapperApplicationModelProvider(IOptions<ResponseWrapperOptions> responseWrapperOptions,
-        ILoggerFactory loggerFactory)
+    public class ResponseWrapperApplicationModelProvider : IApplicationModelProvider
     {
-        var options = responseWrapperOptions.Value;
-        _loggerFactory = loggerFactory;
-        _responseWrapper = options.ResponseWrapper;
-        _responseWrapperType = options.ResponseWrapper.GetType();
-        _genericResponseWrapper = options.GenericResponseWrapper;
-        _genericWrapperType = options.GenericResponseWrapper.GetType().GetGenericTypeDefinition();
-        _suppressModelInvalidWrapper = options.SuppressModelInvalidWrapper;
-        _onlyAvailableInApiController = options.OnlyAvailableInApiController;
-    }
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IResponseWrapper _responseWrapper;
+        private readonly Type _responseWrapperType;
+        private readonly IResponseWrapper<object?> _genericResponseWrapper;
+        private readonly Type _genericWrapperType;
+        private readonly bool _suppressModelInvalidWrapper;
+        private readonly bool _onlyAvailableInApiController;
 
-    public int Order => -1000 + 20;
-
-    public void OnProvidersExecuted(ApplicationModelProviderContext context)
-    {
-        // Intentionally empty.
-    }
-
-    public void OnProvidersExecuting(ApplicationModelProviderContext context)
-    {
-        if (context is null)
+        public ResponseWrapperApplicationModelProvider(IOptions<ResponseWrapperOptions> responseWrapperOptions,
+            ILoggerFactory loggerFactory)
         {
-            throw new ArgumentNullException(nameof(context));
+            var options = responseWrapperOptions.Value;
+            _loggerFactory = loggerFactory;
+            _responseWrapper = options.ResponseWrapper;
+            _responseWrapperType = options.ResponseWrapper.GetType();
+            _genericResponseWrapper = options.GenericResponseWrapper;
+            _genericWrapperType = options.GenericResponseWrapper.GetType().GetGenericTypeDefinition();
+            _suppressModelInvalidWrapper = options.SuppressModelInvalidWrapper;
+            _onlyAvailableInApiController = options.OnlyAvailableInApiController;
         }
 
-        foreach (var controllerModel in context.Result.Controllers)
+        public int Order => -1000 + 20;
+
+        public void OnProvidersExecuted(ApplicationModelProviderContext context)
         {
-            if (_onlyAvailableInApiController && IsApiController(controllerModel))
+            // Intentionally empty.
+        }
+
+        public void OnProvidersExecuting(ApplicationModelProviderContext context)
+        {
+            if (context is null)
             {
-                continue;
+                throw new ArgumentNullException(nameof(context));
             }
-            
-            if (controllerModel.Attributes.OfType<IDisableWrapperMetadata>().Any())
+
+            foreach (var controllerModel in context.Result.Controllers)
             {
-                if (!_suppressModelInvalidWrapper)
+                if (_onlyAvailableInApiController && IsApiController(controllerModel))
                 {
-                    foreach (var actionModel in controllerModel.Actions)
+                    continue;
+                }
+            
+                if (controllerModel.Attributes.OfType<IDisableWrapperMetadata>().Any())
+                {
+                    if (!_suppressModelInvalidWrapper)
+                    {
+                        foreach (var actionModel in controllerModel.Actions)
+                        {
+                            actionModel.Filters.Add(new ModelInvalidWrapperFilter(_responseWrapper, _loggerFactory));
+                        }
+                    }
+
+                    continue;
+                }
+
+                foreach (var actionModel in controllerModel.Actions)
+                {
+                    if (!_suppressModelInvalidWrapper)
                     {
                         actionModel.Filters.Add(new ModelInvalidWrapperFilter(_responseWrapper, _loggerFactory));
                     }
-                }
 
-                continue;
+                    if (actionModel.Attributes.OfType<IDisableWrapperMetadata>().Any()) continue;
+                    actionModel.Filters.Add(new ResultWrapperFilter(_responseWrapper, _genericResponseWrapper));
+                    AddResponseWrapperFilter(actionModel);
+                }
+            }
+        }
+
+        private void AddResponseWrapperFilter(ActionModel actionModel)
+        {
+            const int statusCode = StatusCodes.Status200OK;
+            var responseType = actionModel.ActionMethod.ReturnType;
+            if (responseType.IsAssignableTo(typeof(IConvertToActionResult)))
+            {
+                AddIActionResultWrapperFilter(responseType);
+                return;
             }
 
-            foreach (var actionModel in controllerModel.Actions)
+            if (responseType == typeof(void) || responseType == typeof(Task))
             {
-                if (!_suppressModelInvalidWrapper)
+                AddWrapperFilter();
+                return;
+            }
+
+            if (responseType.BaseType == typeof(Task))
+            {
+                var genericArgument = responseType.GetGenericArguments()[0];
+                if (genericArgument.IsAssignableTo(typeof(IConvertToActionResult)))
                 {
-                    actionModel.Filters.Add(new ModelInvalidWrapperFilter(_responseWrapper, _loggerFactory));
+                    AddIActionResultWrapperFilter(genericArgument);
+                    return;
                 }
 
-                if (actionModel.Attributes.OfType<IDisableWrapperMetadata>().Any()) continue;
-                actionModel.Filters.Add(new ResultWrapperFilter(_responseWrapper, _genericResponseWrapper));
-                AddResponseWrapperFilter(actionModel);
-            }
-        }
-    }
-
-    private void AddResponseWrapperFilter(ActionModel actionModel)
-    {
-        const int statusCode = StatusCodes.Status200OK;
-        var responseType = actionModel.ActionMethod.ReturnType;
-        if (responseType.IsAssignableTo(typeof(IConvertToActionResult)))
-        {
-            AddIActionResultWrapperFilter(responseType);
-            return;
-        }
-
-        if (responseType == typeof(void) || responseType == typeof(Task))
-        {
-            AddWrapperFilter();
-            return;
-        }
-
-        if (responseType.BaseType == typeof(Task))
-        {
-            var genericArgument = responseType.GetGenericArguments()[0];
-            if (genericArgument.IsAssignableTo(typeof(IConvertToActionResult)))
-            {
-                AddIActionResultWrapperFilter(genericArgument);
+                AddGenericWrapperFilter(genericArgument);
                 return;
             }
 
-            AddGenericWrapperFilter(genericArgument);
-            return;
-        }
+            AddGenericWrapperFilter(responseType);
 
-        AddGenericWrapperFilter(responseType);
-
-        void AddWrapperFilter()
-        {
-            actionModel.Filters.Add(new ProducesResponseTypeAttribute(_responseWrapperType, statusCode));
-        }
-
-        void AddGenericWrapperFilter(Type type)
-        {
-            actionModel.Filters.Add(
-                new ProducesResponseTypeAttribute(_genericWrapperType.MakeGenericType(type), statusCode));
-        }
-
-        // Add wrapper filter for the type is assignable to IConvertToActionResult
-        void AddIActionResultWrapperFilter(Type type)
-        {
-            if (type.GetGenericArguments().Any())
+            void AddWrapperFilter()
             {
-                var genericType = type.GetGenericArguments()[0];
-                AddGenericWrapperFilter(genericType);
-                return;
+                actionModel.Filters.Add(new ProducesResponseTypeAttribute(_responseWrapperType, statusCode));
             }
 
-            AddWrapperFilter();
+            void AddGenericWrapperFilter(Type type)
+            {
+                actionModel.Filters.Add(
+                    new ProducesResponseTypeAttribute(_genericWrapperType.MakeGenericType(type), statusCode));
+            }
+
+            // Add wrapper filter for the type is assignable to IConvertToActionResult
+            void AddIActionResultWrapperFilter(Type type)
+            {
+                if (type.GetGenericArguments().Any())
+                {
+                    var genericType = type.GetGenericArguments()[0];
+                    AddGenericWrapperFilter(genericType);
+                    return;
+                }
+
+                AddWrapperFilter();
+            }
         }
-    }
     
-    private static bool IsApiController(ControllerModel controller)
-    {
-        if (controller.Attributes.OfType<IApiBehaviorMetadata>().Any())
+        private static bool IsApiController(ControllerModel controller)
         {
-            return true;
-        }
+            if (controller.Attributes.OfType<IApiBehaviorMetadata>().Any())
+            {
+                return true;
+            }
 
-        var controllerAssembly = controller.ControllerType.Assembly;
-        var assemblyAttributes = controllerAssembly.GetCustomAttributes();
-        return assemblyAttributes.OfType<IApiBehaviorMetadata>().Any();
+            var controllerAssembly = controller.ControllerType.Assembly;
+            var assemblyAttributes = controllerAssembly.GetCustomAttributes();
+            return assemblyAttributes.OfType<IApiBehaviorMetadata>().Any();
+        }
     }
 }
