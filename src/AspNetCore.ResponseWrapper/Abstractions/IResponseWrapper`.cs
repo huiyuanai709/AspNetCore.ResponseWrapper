@@ -1,6 +1,7 @@
-﻿namespace AspNetCore.ResponseWrapper.Abstractions;
-
-public interface IResponseWrapper<in TResponse> : IResponseWrapper
+﻿namespace AspNetCore.ResponseWrapper.Abstractions
 {
-    IResponseWrapper<TResponse> Ok(TResponse response);
+    public interface IResponseWrapper<in TResponse> : IResponseWrapper
+    {
+        IResponseWrapper<TResponse> Ok(TResponse response);
+    }
 }

@@ -1,10 +1,11 @@
-﻿namespace AspNetCore.ResponseWrapper.Abstractions;
-
-public interface IResponseWrapper
+﻿namespace AspNetCore.ResponseWrapper.Abstractions
 {
-    IResponseWrapper Ok();
+    public interface IResponseWrapper
+    {
+        IResponseWrapper Ok();
 
-    IResponseWrapper BusinessError(string message);
+        IResponseWrapper BusinessError(string message);
 
-    IResponseWrapper ClientError(string message);
+        IResponseWrapper ClientError(string message);
+    }
 }
